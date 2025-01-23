@@ -2,7 +2,6 @@
 
 import { createContext, ReactNode, useState } from 'react';
 import { KeyModal } from '../components/key-modal';
-import { Button } from '@heroui/react';
 
 export type UserContextType = {
   accessKey: string;
@@ -31,21 +30,7 @@ export const UserContextProvider = ({ children }: { children: ReactNode }) => {
   return (
     <UserContext.Provider value={contextValue}>
       <KeyModal />
-
-      {accessKey && privateKey ? (
-        <>{children}</>
-      ) : (
-        <div className="flex h-screen w-full flex-col items-center justify-center font-bold">
-          Please add your keys to continue
-          <Button
-            onPress={() => {
-              window.location.reload();
-            }}
-          >
-            Add Keys
-          </Button>
-        </div>
-      )}
+      {children}
     </UserContext.Provider>
   );
 };
