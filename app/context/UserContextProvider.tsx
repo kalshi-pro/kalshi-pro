@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { createContext, ReactNode, useState } from "react";
-import { KeyModal } from "../components/key-modal";
-import { Button } from "@heroui/react";
+import { createContext, ReactNode, useState } from 'react';
+import { KeyModal } from '../components/key-modal';
+import { Button } from '@heroui/react';
 
 export type UserContextType = {
   accessKey: string;
@@ -12,15 +12,15 @@ export type UserContextType = {
 };
 
 export const UserContext = createContext<UserContextType>({
-  accessKey: "",
+  accessKey: '',
   setAccessKey: () => {},
-  privateKey: "",
+  privateKey: '',
   setPrivateKey: () => {},
 });
 
 export const UserContextProvider = ({ children }: { children: ReactNode }) => {
-  const [accessKey, setAccessKey] = useState("");
-  const [privateKey, setPrivateKey] = useState("");
+  const [accessKey, setAccessKey] = useState('');
+  const [privateKey, setPrivateKey] = useState('');
   const contextValue = {
     accessKey,
     setAccessKey,
@@ -35,7 +35,7 @@ export const UserContextProvider = ({ children }: { children: ReactNode }) => {
       {accessKey && privateKey ? (
         <>{children}</>
       ) : (
-        <div className="h-screen w-full flex flex-col justify-center items-center font-bold">
+        <div className="flex h-screen w-full flex-col items-center justify-center font-bold">
           Please add your keys to continue
           <Button
             onPress={() => {

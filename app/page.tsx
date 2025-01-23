@@ -1,85 +1,111 @@
-"use client";
+'use client';
 
-import { Settlement } from "@/types/KalshiAPI";
-import { useContext, useState } from "react";
+import { Settlement } from '@/types/KalshiAPI';
+import { useContext, useState } from 'react';
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { format, subMonths, subWeeks, startOfYear, isAfter } from 'date-fns';
+import { UserContext } from './context/UserContextProvider';
+import { generateEncryptedPayload } from '@/lib/crytpo';
 
-import {
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-} from "recharts";
-import { format, subMonths, subWeeks, startOfYear, isAfter } from "date-fns";
-import { GetSettlementsRouteConstants } from "./api/get-settlements/route";
-import { signPss } from "@/lib/signature";
-import { UserContext } from "./context/UserContextProvider";
+export const signPss = async (privateKeyString: string, text: string) => {
+  try {
+    // Remove PEM headers and convert to ArrayBuffer
+    const base64Key = privateKeyString
+      .replace('-----BEGIN RSA PRIVATE KEY-----', '')
+      .replace('-----END RSA PRIVATE KEY-----', '')
+      .replace(/\s/g, '');
 
-type TimeFilter = "1W" | "1M" | "3M" | "YTD";
+    const keyBuffer = Uint8Array.from(atob(base64Key), (c) => c.charCodeAt(0));
+
+    // Import the private key
+    const privateKey = await window.crypto.subtle.importKey(
+      'pkcs8',
+      keyBuffer,
+      {
+        name: 'RSA-PSS',
+        hash: 'SHA-256',
+      },
+      false,
+      ['sign'],
+    );
+
+    // Convert text to ArrayBuffer
+    const data = new TextEncoder().encode(text);
+
+    // Sign the data
+    const signature = await window.crypto.subtle.sign(
+      {
+        name: 'RSA-PSS',
+        saltLength: 32,
+      },
+      privateKey,
+      data,
+    );
+
+    // Convert signature to base64
+    return btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(signature))));
+  } catch (e) {
+    console.error('Signing error:', e);
+    return null;
+  }
+};
+
+type TimeFilter = '1W' | '1M' | '3M' | 'YTD';
 
 const centsToDollars = (cents: bigint): number => {
   return Number(cents) / 100;
 };
 
 function PnLChart({ settlements }: { settlements: Settlement[] }) {
-  const [timeFilter, setTimeFilter] = useState<TimeFilter>("YTD");
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>('YTD');
 
   const getFilteredData = (filter: TimeFilter) => {
     const now = new Date();
     const filterDate = {
-      "1W": subWeeks(now, 1),
-      "1M": subMonths(now, 1),
-      "3M": subMonths(now, 3),
+      '1W': subWeeks(now, 1),
+      '1M': subMonths(now, 1),
+      '3M': subMonths(now, 3),
       YTD: startOfYear(now),
       ALL: new Date(0), // Beginning of time
     }[filter];
 
     return settlements
-      .filter((settlement) =>
-        isAfter(new Date(settlement.settled_time), filterDate),
-      )
-      .sort(
-        (a, b) =>
-          new Date(a.settled_time).getTime() -
-          new Date(b.settled_time).getTime(),
-      );
+      .filter((settlement) => isAfter(new Date(settlement.settled_time), filterDate))
+      .sort((a, b) => new Date(a.settled_time).getTime() - new Date(b.settled_time).getTime());
   };
 
   const filteredSettlements = getFilteredData(timeFilter);
 
   const chartData = filteredSettlements.map((settlement) => {
     const pnl = centsToDollars(
-      settlement.revenue -
-        (settlement.yes_total_cost + settlement.no_total_cost),
+      settlement.revenue - (settlement.yes_total_cost + settlement.no_total_cost),
     );
     return {
       date: new Date(settlement.settled_time),
       pnl,
-      fill: pnl >= 0 ? "#00C805" : "#FF5000",
+      fill: pnl >= 0 ? '#00C805' : '#FF5000',
     };
   });
 
   const totalPnL = chartData.reduce((sum, data) => sum + data.pnl, 0);
 
   return (
-    <div className="w-full h-[500px] bg-white rounded-lg p-4 shadow-lg">
-      <div className="mb-4 flex justify-between items-center">
+    <div className="h-[500px] w-full rounded-lg bg-white p-4 shadow-lg">
+      <div className="mb-4 flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">${totalPnL.toFixed(2)}</h2>
           <p className="text-gray-500">P&L {timeFilter}</p>
         </div>
 
         <div className="flex gap-2">
-          {(["1W", "1M", "3M", "YTD"] as TimeFilter[]).map((filter) => (
+          {(['1W', '1M', '3M', 'YTD'] as TimeFilter[]).map((filter) => (
             <button
               key={filter}
               onClick={() => setTimeFilter(filter)}
-              className={`px-3 py-1 rounded ${
+              className={`rounded px-3 py-1 ${
                 timeFilter === filter
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
               {filter}
@@ -91,25 +117,19 @@ function PnLChart({ settlements }: { settlements: Settlement[] }) {
       <ResponsiveContainer width="100%" height={400}>
         <BarChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
-          <XAxis
-            dataKey="date"
-            tickFormatter={(date) => format(date, "MMM d")}
-            minTickGap={20}
-          />
+          <XAxis dataKey="date" tickFormatter={(date) => format(date, 'MMM d')} minTickGap={20} />
           <YAxis tickFormatter={(value) => `$${value.toFixed(0)}`} />
           <Tooltip
             content={({ active, payload }) => {
               if (active && payload && payload.length) {
                 return (
-                  <div className="bg-white p-3 shadow-lg rounded-lg border">
+                  <div className="rounded-lg border bg-white p-3 shadow-lg">
                     <p className="text-sm text-gray-600">
-                      {format(payload[0].payload.date, "MMM d, yyyy")}
+                      {format(payload[0].payload.date, 'MMM d, yyyy')}
                     </p>
                     <p
                       className={`text-lg font-bold ${
-                        ((payload[0].value as number) ?? 0) >= 0
-                          ? "text-green-500"
-                          : "text-red-500"
+                        ((payload[0].value as number) ?? 0) >= 0 ? 'text-green-500' : 'text-red-500'
                       }`}
                     >
                       ${((payload[0].value as number) ?? 0).toFixed(2)}
@@ -132,26 +152,22 @@ function PnLChart({ settlements }: { settlements: Settlement[] }) {
       </ResponsiveContainer>
 
       {/* Statistics Section */}
-      <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="p-3 bg-gray-50 rounded-lg">
+      <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="rounded-lg bg-gray-50 p-3">
           <p className="text-sm text-gray-500">Winning Trades</p>
-          <p className="text-lg font-bold">
-            {chartData.filter((d) => d.pnl > 0).length}
-          </p>
+          <p className="text-lg font-bold">{chartData.filter((d) => d.pnl > 0).length}</p>
         </div>
-        <div className="p-3 bg-gray-50 rounded-lg">
+        <div className="rounded-lg bg-gray-50 p-3">
           <p className="text-sm text-gray-500">Losing Trades</p>
-          <p className="text-lg font-bold">
-            {chartData.filter((d) => d.pnl < 0).length}
-          </p>
+          <p className="text-lg font-bold">{chartData.filter((d) => d.pnl < 0).length}</p>
         </div>
-        <div className="p-3 bg-gray-50 rounded-lg">
+        <div className="rounded-lg bg-gray-50 p-3">
           <p className="text-sm text-gray-500">Largest Win</p>
           <p className="text-lg font-bold text-green-500">
             ${Math.max(...chartData.map((d) => d.pnl), 0).toFixed(2)}
           </p>
         </div>
-        <div className="p-3 bg-gray-50 rounded-lg">
+        <div className="rounded-lg bg-gray-50 p-3">
           <p className="text-sm text-gray-500">Largest Loss</p>
           <p className="text-lg font-bold text-red-500">
             ${Math.min(...chartData.map((d) => d.pnl), 0).toFixed(2)}
@@ -168,26 +184,12 @@ export default function Home() {
 
   const getSettlements = async () => {
     try {
-      const currentTime = new Date();
-
-      const currentTimeMilliseconds = currentTime.getTime();
-      const timestampStr = currentTimeMilliseconds.toString();
-
-      const msgString =
-        timestampStr +
-        GetSettlementsRouteConstants.method +
-        GetSettlementsRouteConstants.path;
-      const signature = signPss(privateKey, msgString);
-      if (!signature) {
-        throw new Error("Failed to sign the message");
-      }
-
-      const res = await fetch("/api/get-settlements", {
-        method: "POST",
+      const encryptedPrivateKey = generateEncryptedPayload(privateKey);
+      const res = await fetch('/api/get-settlements', {
+        method: 'POST',
         body: JSON.stringify({
           accessKey,
-          signature,
-          timestampStr,
+          encryptedPrivateKey,
         }),
       });
       if (res.ok) {
@@ -202,10 +204,7 @@ export default function Home() {
   return (
     <div className="grid min-h-screen grid-rows-[20px_1fr_20px] items-center justify-items-center gap-16 p-8 pb-20 font-[family-name:var(--font-geist-sans)] sm:p-20">
       <main className="row-start-2 flex flex-col items-center gap-8 sm:items-start">
-        <button
-          onClick={getSettlements}
-          className="px-8 py-4 text-white bg-blue-500 rounded-lg"
-        >
+        <button onClick={getSettlements} className="rounded-lg bg-blue-500 px-8 py-4 text-white">
           Get Settlements
         </button>
 
@@ -213,7 +212,7 @@ export default function Home() {
 
         {/* Optional: Add a table below the chart */}
         {settlements.length > 0 && (
-          <div className="w-full overflow-x-auto mt-20">
+          <div className="mt-20 w-full overflow-x-auto">
             <table className="w-full text-left">
               <thead>
                 <tr>
@@ -227,7 +226,7 @@ export default function Home() {
                 {settlements.map((settlement, index) => (
                   <tr key={index} className="border-t">
                     <td className="p-2">
-                      {format(new Date(settlement.settled_time), "MMM d, yyyy")}
+                      {format(new Date(settlement.settled_time), 'MMM d, yyyy')}
                     </td>
                     <td className="p-2">{settlement.ticker}</td>
                     <td className="p-2">{settlement.market_result}</td>
@@ -237,18 +236,15 @@ export default function Home() {
                         color:
                           centsToDollars(
                             settlement.revenue -
-                              (settlement.yes_total_cost +
-                                settlement.no_total_cost),
+                              (settlement.yes_total_cost + settlement.no_total_cost),
                           ) >= 0
-                            ? "#00C805"
-                            : "#FF5000",
+                            ? '#00C805'
+                            : '#FF5000',
                       }}
                     >
                       $
                       {centsToDollars(
-                        settlement.revenue -
-                          (settlement.yes_total_cost +
-                            settlement.no_total_cost),
+                        settlement.revenue - (settlement.yes_total_cost + settlement.no_total_cost),
                       )}
                     </td>
                   </tr>
