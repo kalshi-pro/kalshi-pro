@@ -1,4 +1,5 @@
 import { decryptWithPrivateKey, signPss } from '@/lib/crytpo';
+import { SettlementsResponse } from '@/types/KalshiAPI';
 import { NextResponse } from 'next/server';
 
 export const GetSettlementsRouteConstants = {
@@ -33,17 +34,32 @@ export async function POST(request: Request) {
     headers.set('KALSHI-ACCESS-TIMESTAMP', timestampStr);
     headers.set('Content-Type', 'application/json');
 
-    const response = await fetch(
-      GetSettlementsRouteConstants.baseUrl + GetSettlementsRouteConstants.path,
-      {
-        method: GetSettlementsRouteConstants.method,
-        headers,
-      },
+    let cursor = '';
+    let latestTimestamp = '';
+    const contents = [];
+    do {
+      const response = await fetch(
+        GetSettlementsRouteConstants.baseUrl + GetSettlementsRouteConstants.path,
+        {
+          method: GetSettlementsRouteConstants.method,
+          headers,
+        },
+      );
+      if (!response.ok) {
+        throw new Error(`Failed to fetch data: ${response.statusText}`);
+      }
+      const json = (await response.json()) as SettlementsResponse;
+      cursor = json.cursor;
+      contents.push(...json.settlements);
+    } while (cursor !== '');
+    // sort
+    contents.sort(
+      (a, b) => new Date(b.settled_time).getTime() - new Date(a.settled_time).getTime(),
     );
-    if (!response.ok) {
-      throw new Error(`Failed to fetch data: ${response.statusText}`);
-    }
-    const contents = await response.json();
+    // store result and timestamp in a database]
+
+    latestTimestamp = contents[0].settled_time;
+    console.log(contents, latestTimestamp);
     return NextResponse.json(contents);
   } catch (error) {
     return NextResponse.json({ error }, { status: 500 });

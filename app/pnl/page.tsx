@@ -140,11 +140,13 @@ export default function Home() {
         body: JSON.stringify({
           accessKey,
           encryptedPrivateKey,
+          status: 'executed',
         }),
       });
       if (res.ok) {
         const data = await res.json();
-        setSettlements(data.settlements);
+        console.log(data);
+        // setSettlements(data.settlements);
       }
     } catch (error) {
       console.error(error);
