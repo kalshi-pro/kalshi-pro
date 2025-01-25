@@ -14,7 +14,7 @@ export interface SettlementsResponse {
   cursor: string;
 }
 
-export interface OrderResponse {
+export interface OrdersResponse {
   cursor: string;
   orders: Order[];
 }
@@ -48,4 +48,60 @@ export interface Order {
   type: 'market' | 'limit' | 'OrderTypeUnknown';
   user_id?: string;
   yes_price: number;
+}
+
+export interface FillsResponse {
+  cursor: string;
+  fills: Fill[];
+}
+
+export interface Fill {
+  action: 'buy' | 'sell' | 'OrderActionUnknown';
+  count: number;
+  created_time: string;
+  is_taker: boolean;
+  no_price: number;
+  order_id: string;
+  side: 'yes' | 'no' | 'SIDE_UNSET';
+  ticker: string;
+  trade_id: string;
+  yes_price: number;
+}
+
+/**
+ * Internal type
+ * If it's settled, then settled_side is either 'yes' or 'no', and the
+ * count is the number of left-over contractes to be settled and price
+ * would be the price at which the contract was settled (usually 100
+ * cents or 0 cents).
+ */
+export interface UserPnL {
+  [ticker: string]: {
+    profit_type: 'settled' | 'trade';
+    trade?: Trade;
+    settled?: {
+      settled_side: 'yes' | 'no';
+      count: number;
+      price: number;
+    };
+
+    executed_time: string;
+    side: 'yes' | 'no';
+    action: 'buy' | 'sell' | 'settle';
+    count: number;
+    price: number;
+    total: number;
+    settled_side?: 'yes' | 'no';
+  };
+}
+
+/**
+ * Internal type
+ */
+export interface Trade {
+  settled_time: string;
+  market_result: string;
+  revenue: bigint;
+  yes_total_cost: bigint;
+  no_total_cost: bigint;
 }

@@ -4,8 +4,9 @@ import { Settlement } from '@/types/KalshiAPI';
 import { useContext, useState } from 'react';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { format, subMonths, subWeeks, startOfYear, isAfter } from 'date-fns';
-import { UserContext } from '../context/UserContextProvider';
+
 import { generateEncryptedPayload } from '@/lib/crytpo';
+import { UserContext } from '@/app/context/UserContextProvider';
 
 type TimeFilter = '1W' | '1M' | '3M' | 'YTD';
 
@@ -127,6 +128,12 @@ function PnLChart({ settlements }: { settlements: Settlement[] }) {
     </div>
   );
 }
+// async function getTrades() {
+//   const res = await fetch(`https://...`, { cache: 'no-store' })
+//   const projects = await res.json()
+
+//   return projects
+// }
 
 export default function Home() {
   const { privateKey, accessKey } = useContext(UserContext);
@@ -135,7 +142,7 @@ export default function Home() {
   const getSettlements = async () => {
     try {
       const encryptedPrivateKey = generateEncryptedPayload(privateKey);
-      const res = await fetch('/api/get-settlements', {
+      const res = await fetch('/api/get-orders', {
         method: 'POST',
         body: JSON.stringify({
           accessKey,

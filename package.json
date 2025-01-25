@@ -10,6 +10,7 @@
     "format": "prettier --write ."
   },
   "dependencies": {
+    "@clerk/nextjs": "^6.10.2",
     "@heroui/alert": "^2.2.10",
     "@heroui/image": "^2.2.6",
     "@heroui/input": "^2.4.10",
@@ -17,6 +18,8 @@
     "@heroui/react": "^2.6.14",
     "@heroui/system": "^2.4.7",
     "@heroui/theme": "^2.4.6",
+    "@supabase/ssr": "^0.5.2",
+    "@supabase/supabase-js": "^2.48.1",
     "clsx": "^2.1.1",
     "crypto": "^1.0.1",
     "crypto-js": "^4.2.0",
@@ -33,6 +36,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@flydotio/dockerfile": "^0.7.4",
     "@types/crypto-js": "^4.2.2",
     "@types/node": "^20",
     "@types/react": "^19",
