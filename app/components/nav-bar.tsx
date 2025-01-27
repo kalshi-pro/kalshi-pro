@@ -37,9 +37,9 @@ export const NavBar = () => {
         ))}
       </ul>
       <div className="flex w-full flex-col items-center justify-center gap-4">
-        <Link href="/sign-in" className="w-full">
+        <Link href="https://github.com/openbook-hq/openbook" target="_blank" className="w-full">
           <Button className="w-full" startContent={<IconBrandGithub />}>
-            Contribute{' '}
+            Contribute
           </Button>
         </Link>
         <UserButton />

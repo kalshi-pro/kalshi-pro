@@ -29,9 +29,11 @@ export default function Home() {
                 Get Started
               </button>
             </Link>
-            <button className="rounded-lg bg-black px-4 py-2 text-white shadow-[0px_2px_0px_0px_#FFFFFF40_inset] hover:bg-white/20">
-              Contribute
-            </button>
+            <Link href="https://github.com/openbook-hq/openbook" target="_blank">
+              <button className="rounded-lg bg-black px-4 py-2 text-white shadow-[0px_2px_0px_0px_#FFFFFF40_inset] hover:bg-white/20">
+                Contribute
+              </button>
+            </Link>
           </div>
         </div>
       </Vortex>

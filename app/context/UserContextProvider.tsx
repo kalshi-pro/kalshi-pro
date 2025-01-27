@@ -46,8 +46,8 @@ export const UserContextProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <UserContext.Provider value={contextValue}>
-      {pathname !== '/' && <KeyModal />}
-      {(accessKey && privateKey && keysSet) || pathname === '/' ? (
+      {pathname === '/dashboard' && <KeyModal />}
+      {(accessKey && privateKey && keysSet) || pathname !== '/dashboard' ? (
         <>{children}</>
       ) : rendered ? (
         <div className="flex h-screen items-center justify-center">
