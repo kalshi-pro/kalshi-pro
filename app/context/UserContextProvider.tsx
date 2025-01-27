@@ -46,7 +46,7 @@ export const UserContextProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <UserContext.Provider value={contextValue}>
-      <KeyModal />
+      {pathname !== '/' && <KeyModal />}
       {(accessKey && privateKey && keysSet) || pathname === '/' ? (
         <>{children}</>
       ) : rendered ? (
