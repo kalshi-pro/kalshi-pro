@@ -1,27 +1,19 @@
-import { decryptWithPrivateKey, signPss } from '@/lib/crytpo';
-import { SettlementsResponse } from '@/types/KalshiAPI';
+import { decryptWithPrivateKey, signPss } from '../crytpo';
 import { createClient } from '@/utils/supabase/server';
-import { NextResponse } from 'next/server';
-import { auth, clerkClient } from '@clerk/nextjs/server';
+import { SettlementsResponse } from '@/types/KalshiAPI';
 
 export const GetSettlementsRouteConstants = {
   method: 'GET',
   baseUrl: 'https://api.elections.kalshi.com',
   path: '/trade-api/v2/portfolio/settlements',
 };
-
-export async function POST(request: Request) {
-  const { accessKey, encryptedPrivateKey } = await request.json();
-  if (!accessKey || !encryptedPrivateKey) {
-    return NextResponse.json({ error: 'Missing access key or private key' }, { status: 400 });
-  }
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: 'No user found' }, { status: 401 });
-  }
-
+export const fetchNewSettlements = async (
+  accessKey: string,
+  encryptedPrivateKey: string,
+  userId: string,
+  lastTradesFetchedAt?: string,
+) => {
   try {
-    const client = await clerkClient();
     const privateKey = decryptWithPrivateKey(encryptedPrivateKey);
     if (!privateKey) {
       throw new Error('Failed to decrypt the private key');
@@ -29,12 +21,6 @@ export async function POST(request: Request) {
     const currentTime = new Date();
     const currentTimeMilliseconds = currentTime.getTime();
     const timestampStr = currentTimeMilliseconds.toString();
-    const user = await client.users.getUser(userId);
-    const publicMetadata = user.publicMetadata;
-    const lastSettlementsFetchedAt = publicMetadata.last_settlements_fetched_at as
-      | string
-      | undefined
-      | null;
 
     const msgString =
       timestampStr + GetSettlementsRouteConstants.method + GetSettlementsRouteConstants.path;
@@ -51,15 +37,11 @@ export async function POST(request: Request) {
     headers.set('Content-Type', 'application/json');
 
     let cursor = '';
-    let latestTimestamp = '';
     const contents = [];
 
     const queryParams = new URLSearchParams();
-    if (!!lastSettlementsFetchedAt) {
-      queryParams.append(
-        'min_ts',
-        Math.floor(new Date(lastSettlementsFetchedAt).getTime() / 1000) + '',
-      );
+    if (!!lastTradesFetchedAt) {
+      queryParams.append('min_ts', Math.floor(new Date(lastTradesFetchedAt).getTime() / 1000) + '');
     }
 
     do {
@@ -70,7 +52,7 @@ export async function POST(request: Request) {
       const response = await fetch(
         GetSettlementsRouteConstants.baseUrl +
           GetSettlementsRouteConstants.path +
-          (!!lastSettlementsFetchedAt || !!cursor ? '?' + queryParams.toString() : ''),
+          (!!lastTradesFetchedAt || !!cursor ? '?' + queryParams.toString() : ''),
         {
           method: GetSettlementsRouteConstants.method,
           headers,
@@ -88,7 +70,6 @@ export async function POST(request: Request) {
     contents.sort(
       (a, b) => new Date(b.settled_time).getTime() - new Date(a.settled_time).getTime(),
     );
-    latestTimestamp = contents[0].settled_time;
 
     const supabase = await createClient();
 
@@ -103,15 +84,9 @@ export async function POST(request: Request) {
       throw new Error('Failed to upsert settlements into the database:' + error.message);
     }
 
-    await client.users.updateUserMetadata(userId, {
-      publicMetadata: {
-        last_settlements_fetched_at: latestTimestamp,
-      },
-    });
-
-    return NextResponse.json(contents);
+    return contents;
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error }, { status: 500 });
+    throw new Error('Failed to fetch settlements from the database:' + error);
   }
-}
+};

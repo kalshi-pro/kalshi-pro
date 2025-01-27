@@ -2,15 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --secondary: #fefefe;
+  --dashboard-background: #f3f3f3;
+  --navbar-background: #ffffff;
+
+}
+
+.child-container {
+  border-radius: calc(3.5rem - 1px);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --secondary: #292929;
+    --dashboard-background: #121212;
+    --navbar-background: #292929;
   }
 }
 

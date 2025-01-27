@@ -13,6 +13,9 @@ export default {
       colors: {
         background: 'var(--background)',
         foreground: 'var(--foreground)',
+        secondary: 'var(--secondary)',
+        'dashboard-background': 'var(--dashboard-background)',
+        'navbar-background': 'var(--navbar-background)',
       },
     },
   },

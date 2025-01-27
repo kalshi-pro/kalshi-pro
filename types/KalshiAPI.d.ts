@@ -56,13 +56,13 @@ export interface FillsResponse {
 }
 
 export interface Fill {
-  action: 'buy' | 'sell' | 'OrderActionUnknown';
+  action: 'buy' | 'sell';
   count: number;
   created_time: string;
   is_taker: boolean;
   no_price: number;
   order_id: string;
-  side: 'yes' | 'no' | 'SIDE_UNSET';
+  side: 'yes' | 'no';
   ticker: string;
   trade_id: string;
   yes_price: number;
@@ -99,9 +99,22 @@ export interface UserPnL {
  * Internal type
  */
 export interface Trade {
-  settled_time: string;
-  market_result: string;
-  revenue: bigint;
-  yes_total_cost: bigint;
-  no_total_cost: bigint;
+  id?: number;
+  user_id: string;
+  ticker: string;
+  gross_profit: number;
+  type: string; // 'settlement' | 'trade';
+  market_result?: string | null; // must have this if there's a settlement type
+  buy: {
+    side: string; //'yes' | 'no';
+    count: number;
+    price: number;
+    bought_at: string;
+  };
+  exit: {
+    side: stringl; // 'yes' | 'no';
+    count: number;
+    price: number;
+    exit_at: string;
+  };
 }

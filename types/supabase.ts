@@ -42,6 +42,7 @@ export type Database = {
           trade_id: string;
           user_id: string;
           yes_price: number;
+          fetched_at: string;
         };
         Insert: {
           action?: string | null;
@@ -56,6 +57,7 @@ export type Database = {
           trade_id: string;
           user_id: string;
           yes_price: number;
+          fetched_at?: string;
         };
         Update: {
           action?: string | null;
@@ -70,6 +72,7 @@ export type Database = {
           trade_id?: string;
           user_id?: string;
           yes_price?: number;
+          fetched_at?: string;
         };
         Relationships: [];
       };
@@ -104,6 +107,7 @@ export type Database = {
           type: string | null;
           user_id: string;
           yes_price: number;
+          fetched_at: string;
         };
         Insert: {
           action?: string | null;
@@ -135,6 +139,7 @@ export type Database = {
           type?: string | null;
           user_id: string;
           yes_price: number;
+          fetched_at?: string;
         };
         Update: {
           action?: string | null;
@@ -166,6 +171,7 @@ export type Database = {
           type?: string | null;
           user_id?: string;
           yes_price?: number;
+          fetched_at?: string;
         };
         Relationships: [];
       };
@@ -181,6 +187,7 @@ export type Database = {
           user_id: string;
           yes_count: bigint;
           yes_total_cost: bigint;
+          fetched_at: string;
         };
         Insert: {
           key: string;
@@ -193,6 +200,7 @@ export type Database = {
           user_id: string;
           yes_count: bigint;
           yes_total_cost: bigint;
+          fetched_at?: string;
         };
         Update: {
           key?: string;
@@ -205,6 +213,61 @@ export type Database = {
           user_id?: string;
           yes_count?: bigint;
           yes_total_cost?: bigint;
+          fetched_at?: string;
+        };
+        Relationships: [];
+      };
+      trades: {
+        Row: {
+          buy_bought_at: string;
+          buy_count: number;
+          buy_price: number;
+          buy_side: string;
+          exit_at: string;
+          exit_count: number;
+          exit_price: number;
+          exit_side: string;
+          gross_profit: number;
+          id: number;
+          market_result: string | null;
+          ticker: string;
+          type: string;
+          user_id: string;
+          fetched_at: string;
+        };
+        Insert: {
+          buy_bought_at: string;
+          buy_count: number;
+          buy_price: number;
+          buy_side: string;
+          exit_at: string;
+          exit_count: number;
+          exit_price: number;
+          exit_side: string;
+          gross_profit: number;
+          id?: never;
+          market_result?: string | null;
+          ticker: string;
+          type: string;
+          user_id: string;
+          fetched_at?: string;
+        };
+        Update: {
+          buy_bought_at?: string;
+          buy_count?: number;
+          buy_price?: number;
+          buy_side?: string;
+          exit_at?: string;
+          exit_count?: number;
+          exit_price?: number;
+          exit_side?: string;
+          gross_profit?: number;
+          id?: never;
+          market_result?: string | null;
+          ticker?: string;
+          type?: string;
+          user_id?: string;
+          fetched_at?: string;
         };
         Relationships: [];
       };
